@@ -37,7 +37,6 @@ source "amazon-ebs" "ubuntu" {
     most_recent = true
     owners      = ["099720109477"]
   }
-
 }
 build {
   sources = [
@@ -53,6 +52,4 @@ build {
     ]
   }
   post-processor "manifest" {}
-
-
 }
