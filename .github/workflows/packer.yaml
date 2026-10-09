@@ -1,0 +1,34 @@
+
+name: Packer AMI Build
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-ami:
+    name: Validate and Build AMI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Packer
+        uses: hashicorp/setup-packer@main
+
+      - name: Initialize Packer
+        run: packer init .
+
+      - name: Check formatting
+        run: packer fmt -check .
+
+      - name: Validate template
+        run: packer validate -var-file="dev.pkrvars.hcl" .
+
+      - name: Build AMI
+        run: packer build -var-file="dev.pkrvars.hcl" .
