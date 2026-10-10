@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,6 +13,9 @@ jobs:
   build-ami:
     name: Validate and Build AMI
     runs-on: ubuntu-latest
+    if: vars.AWS_AMI_BUILDS_ENABLED == 'true'
+    environment:
+      name: ami-build
 
     steps:
       - name: Checkout repository
