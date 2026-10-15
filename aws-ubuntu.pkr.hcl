@@ -51,5 +51,7 @@ build {
       "sudo apt-get install -y nginx"
     ]
   }
-  post-processor "manifest" {}
+  post-processor "manifest" {
+    output = "manifest.json"
+  }
 }

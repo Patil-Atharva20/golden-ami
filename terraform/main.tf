@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.10.0"
 
   required_providers {
     aws = {
@@ -7,6 +7,8 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {}
 }
 
 variable "region" {
@@ -18,7 +20,6 @@ variable "region" {
 variable "ami_id" {
   description = "ID of the Packer-built AMI to test (for example, ami-0123456789abcdef0)."
   type        = string
-  default     = "here look "
 
   validation {
     condition     = can(regex("^ami-[0-9a-fA-F]+$", var.ami_id))
