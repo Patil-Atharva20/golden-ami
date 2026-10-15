@@ -12,6 +12,7 @@ terraform {
 variable "region" {
   description = "AWS region where the AMI is available."
   type        = string
+  default     = "t3.micro"
 }
 
 variable "ami_id" {
