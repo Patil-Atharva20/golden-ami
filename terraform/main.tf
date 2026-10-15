@@ -12,12 +12,13 @@ terraform {
 variable "region" {
   description = "AWS region where the AMI is available."
   type        = string
-  default     = "t3.micro"
+  default     = "ap-south-1"
 }
 
 variable "ami_id" {
   description = "ID of the Packer-built AMI to test (for example, ami-0123456789abcdef0)."
   type        = string
+  default     = "here look "
 
   validation {
     condition     = can(regex("^ami-[0-9a-fA-F]+$", var.ami_id))

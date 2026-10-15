@@ -29,4 +29,4 @@ Before enabling it, configure the GitHub repository:
 Do not set the enable variable until the environment and `main` ruleset are
 configured. Confirm the ruleset's bypass list carefully: anyone who can bypass
 the update restriction can change `main`. GitHub settings—not the workflow
-file—control repository access and branch protection.
+file—control repository access and branch protection
