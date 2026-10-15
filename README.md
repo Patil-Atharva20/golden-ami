@@ -1,6 +1,6 @@
 # golden-ami
 
-## AMI build and EC2 deployment
+## AMI build and EC2 Deployment
 
 The GitHub Actions workflow runs on pushes to `main` and can also be started
 manually. It builds a uniquely named AMI, extracts its ID from Packer's
