@@ -52,7 +52,7 @@ variable "ssh_public_key" {
 variable "ssh_allowed_cidr" {
   description = "Single trusted public IPv4 address allowed to connect over SSH."
   type        = string
-  default     = "223.181.78.206/32"
+  default     = "223.181.76.88/32"
 
   validation {
     condition     = can(cidrnetmask(var.ssh_allowed_cidr)) && can(regex("/32$", var.ssh_allowed_cidr))

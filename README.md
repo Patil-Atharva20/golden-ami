@@ -48,7 +48,7 @@ In **Settings → Secrets and variables → Actions → Secrets**, add
 `golden-ami`.
 
 Terraform registers the public key in EC2, attaches it to the instance, and
-allows SSH only from `223.181.78.206/32`. If your public IP changes, update
+allows SSH only from `223.181.76.88/32`. If your public IP changes, update
 `ssh_allowed_cidr` in `terraform/main.tf` to your new address in `/32` format
 and push the change before deploying again. The EC2 instance also needs an
 assigned public IP and the AWS account's default VPC.
