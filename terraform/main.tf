@@ -39,16 +39,72 @@ variable "instance_name" {
   default     = "packer-ami-test"
 }
 
+variable "ssh_public_key" {
+  description = "Public SSH key corresponding to the private key kept on your local machine."
+  type        = string
+
+  validation {
+    condition     = can(regex("^(ssh-ed25519|ssh-rsa) ", var.ssh_public_key))
+    error_message = "ssh_public_key must be an OpenSSH Ed25519 or RSA public key."
+  }
+}
+
+variable "ssh_allowed_cidr" {
+  description = "Single trusted public IPv4 address allowed to connect over SSH."
+  type        = string
+  default     = "223.181.78.206/32"
+
+  validation {
+    condition     = can(cidrnetmask(var.ssh_allowed_cidr)) && can(regex("/32$", var.ssh_allowed_cidr))
+    error_message = "ssh_allowed_cidr must be a single IPv4 address in /32 format."
+  }
+}
+
 provider "aws" {
   region = var.region
 }
 
-resource "aws_instance" "ami_test" {
-  ami           = var.ami_id
-  instance_type = var.instance_type
+data "aws_vpc" "default" {
+  default = true
+}
 
-  # Use the account's default VPC and default security group. No inbound access is added.
-  # This avoids assuming a particular VPC or opening SSH/HTTP to the internet.
+resource "aws_key_pair" "local_ssh" {
+  key_name   = "golden-ami-local-ssh"
+  public_key = var.ssh_public_key
+}
+
+resource "aws_security_group" "ssh" {
+  name        = "golden-ami-ssh"
+  description = "Allow SSH only from the configured trusted IPv4 address."
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    description = "SSH from trusted IPv4 address"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.ssh_allowed_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name      = "golden-ami-ssh"
+    ManagedBy = "Terraform"
+  }
+}
+
+resource "aws_instance" "ami_test" {
+  ami                         = var.ami_id
+  instance_type               = var.instance_type
+  key_name                    = aws_key_pair.local_ssh.key_name
+  vpc_security_group_ids      = [aws_security_group.ssh.id]
+  associate_public_ip_address = true
 
   tags = {
     Name      = var.instance_name
@@ -70,4 +126,9 @@ output "instance_ami_id" {
 output "instance_private_ip" {
   description = "Private IP, if assigned."
   value       = aws_instance.ami_test.private_ip
+}
+
+output "instance_public_ip" {
+  description = "Public IP for SSH access from the configured trusted IPv4 address."
+  value       = aws_instance.ami_test.public_ip
 }

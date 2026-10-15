@@ -74,9 +74,15 @@ jobs:
       - name: Plan Terraform
         env:
           AMI_ID: ${{ steps.ami.outputs.ami_id }}
+          TF_VAR_ssh_public_key: ${{ secrets.EC2_SSH_PUBLIC_KEY }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: terraform -chdir=terraform plan -input=false -out=tfplan -var="ami_id=$AMI_ID"
+        run: |
+          if [ -z "$TF_VAR_ssh_public_key" ]; then
+            echo "EC2_SSH_PUBLIC_KEY repository secret must contain your OpenSSH public key."
+            exit 1
+          fi
+          terraform -chdir=terraform plan -input=false -out=tfplan -var="ami_id=$AMI_ID"
 
       - name: Apply Terraform
         run: terraform -chdir=terraform apply -input=false tfplan

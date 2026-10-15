@@ -32,6 +32,33 @@ terraform -chdir=terraform init -migrate-state -backend-config="bucket=<globally
 
 Terraform 1.10 or newer is required for S3 lockfiles.
 
+### Local SSH key setup
+
+Generate the SSH key pair on your own machine. The private key stays local;
+only the public key is passed to Terraform and stored in AWS:
+
+```powershell
+ssh-keygen -t ed25519 -f "$HOME\.ssh\golden-ami" -C "golden-ami"
+Get-Content "$HOME\.ssh\golden-ami.pub"
+```
+
+In **Settings → Secrets and variables → Actions → Secrets**, add
+`EC2_SSH_PUBLIC_KEY` with the complete one-line contents of
+`golden-ami.pub`. This is public key material; do not upload the private file
+`golden-ami`.
+
+Terraform registers the public key in EC2, attaches it to the instance, and
+allows SSH only from `223.181.78.206/32`. If your public IP changes, update
+`ssh_allowed_cidr` in `terraform/main.tf` to your new address in `/32` format
+and push the change before deploying again. The EC2 instance also needs an
+assigned public IP and the AWS account's default VPC.
+
+After deployment, connect from the machine holding the private key:
+
+```powershell
+ssh -i "$HOME\.ssh\golden-ami" ubuntu@<instance-public-ip>
+```
+
 ### GitHub configuration
 
 Before enabling the workflow:
@@ -53,7 +80,10 @@ Before enabling the workflow:
    `AWS_AMI_BUILDS_ENABLED` with value `true` only after setup is complete.
 5. Ensure the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` secrets are
    narrowly scoped to the Packer build, EC2 deployment, and access to the state
-   bucket (including S3 lockfile operations).
+   bucket (including S3 lockfile operations). Terraform also needs permissions
+   to import/delete and describe the EC2 key pair, describe the default VPC,
+   create/describe/delete the SSH security group, authorize/revoke ingress and
+   egress rules, manage EC2 tags, and create/replace the EC2 instance.
 
 Do not set the enable variable until the environment and `main` ruleset are
 configured. Confirm the ruleset's bypass list carefully: anyone who can bypass
