@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "*.pkr.hcl"
+      - "*.pkrvars.hcl"
   workflow_dispatch:
 
 permissions:

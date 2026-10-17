@@ -2,11 +2,13 @@
 
 ## AMI build and EC2 Deployment
 
-The GitHub Actions workflow runs on pushes to `main` and can also be started
-manually. It builds a uniquely named AMI, extracts its ID from Packer's
-`manifest.json`, and passes the ID to Terraform to create or update the EC2
-instance. Terraform state is stored in S3 so later runs update the same
-instance rather than creating a new one.
+The GitHub Actions workflows can also be started manually. Changes to Packer
+templates or variable files on `main` build a uniquely named AMI, extract its
+ID from Packer's `manifest.json`, and pass the ID to Terraform to create or
+update the EC2 instance. Changes under `terraform/` run Terraform only, using
+the AMI ID already recorded in Terraform state; they do not rebuild the AMI.
+README-only changes do not start either workflow. Terraform state is stored in
+S3 so later runs update the same instance rather than creating a new one.
 
 ### One-time Terraform state setup
 
