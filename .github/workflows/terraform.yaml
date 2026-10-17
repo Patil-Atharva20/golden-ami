@@ -52,6 +52,9 @@ jobs:
       - name: Read current AMI ID
         id: ami
         shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           if ! ami_id="$(terraform -chdir=terraform output -raw instance_ami_id)"; then
             echo "Terraform state must contain the instance_ami_id output. Run the Packer workflow first to create and deploy an AMI."
