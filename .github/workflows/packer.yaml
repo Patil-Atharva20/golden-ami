@@ -7,6 +7,7 @@ on:
     paths:
       - "*.pkr.hcl"
       - "*.pkrvars.hcl"
+      - ".github/workflows/packer.yaml"
   workflow_dispatch:
 
 permissions:
