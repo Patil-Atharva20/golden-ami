@@ -8,6 +8,62 @@ The project separates image creation from infrastructure deployment: Packer
 changes produce a new AMI and deploy it, while Terraform-only changes reuse the
 AMI already recorded in Terraform state.
 
+## Architecture
+
+```mermaid
+flowchart TD
+    Dev[Developer] -->|Push to main| GitHub[GitHub repository]
+    Dev -->|Manual dispatch| Actions
+
+    GitHub -->|packer/** or Packer workflow changed| PackerWorkflow
+    GitHub -->|terraform/** or Terraform workflow changed| TerraformWorkflow
+    GitHub -.->|Docs and unrelated changes: no run| NoWorkflow[No AWS workflow]
+
+    subgraph Actions[GitHub Actions]
+        PackerWorkflow[Packer build and deploy workflow]
+        TerraformWorkflow[Terraform-only deployment workflow]
+        Gate{AWS_AMI_BUILDS_ENABLED is true?}
+        PackerWorkflow --> Gate
+        TerraformWorkflow --> Gate
+        Secrets[Repository secrets<br/>AWS credentials and EC2 public key]
+        Gate -->|Enabled| PackerSteps[Packer init, format check,<br/>validate and build]
+        Gate -->|Enabled| TerraformSteps[Terraform init, validate,<br/>plan and apply]
+        PackerSteps --> Manifest[packer/manifest.json<br/>extract AMI ID]
+        Manifest -->|AMI_ID| TerraformSteps
+    end
+
+    Secrets -->|AWS credentials| PackerSteps
+    Secrets -->|AWS credentials and SSH key| TerraformSteps
+
+    subgraph AWS[Amazon Web Services - ap-south-1]
+        Source[Ubuntu 22.04 source AMI]
+        BuildInstance[Temporary Packer EC2 builder]
+        NewAMI[New Ubuntu AMI<br/>with Nginx]
+        VPC[Default VPC]
+        SSHKey[EC2 key-pair registration]
+        SecurityGroup[SSH security group<br/>TCP 22 from trusted /32]
+        TestInstance[Terraform-managed EC2 instance]
+        StateBucket[S3 Terraform state bucket<br/>versioned, encrypted, locked]
+
+        Source --> BuildInstance -->|Packer provisions Nginx| NewAMI
+        VPC --> SecurityGroup
+        SSHKey --> TestInstance
+        SecurityGroup --> TestInstance
+        NewAMI -->|AMI_ID| TestInstance
+        TestInstance -.->|instance, AMI and IP outputs| TerraformSteps
+        TerraformSteps <-->|Read/write state and lock| StateBucket
+    end
+
+    PackerSteps -->|Build request| BuildInstance
+    TerraformSteps -->|Create or update resources| TestInstance
+```
+
+The Packer workflow builds an image and immediately deploys it through
+Terraform. The Terraform-only workflow does not build an image; it reads
+`instance_ami_id` from the existing Terraform state before planning changes.
+The S3 bucket is created separately by the state-bootstrap configuration and
+is not managed by the application deployment workflow.
+
 ## What it does
 
 - Builds a uniquely named Ubuntu 22.04 AMI with Nginx using Packer.
