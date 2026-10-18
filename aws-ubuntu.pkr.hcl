@@ -46,7 +46,14 @@ build {
   provisioner "shell" {
     inline = [
       "echo Installing Updates",
-      "sudo apt-get update",
+      "for attempt in 1 2 3; do",
+      "  echo \"APT update attempt $attempt of 3\"",
+      "  sudo rm -rf /var/lib/apt/lists/*",
+      "  sudo apt-get clean",
+      "  if sudo apt-get -o Acquire::Retries=3 update; then break; fi",
+      "  if [ \"$attempt\" -eq 3 ]; then exit 1; fi",
+      "  sleep $((attempt * 5))",
+      "done",
       "sudo apt-get upgrade -y",
       "sudo apt-get install -y nginx"
     ]
