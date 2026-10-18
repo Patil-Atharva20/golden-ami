@@ -5,8 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "*.pkr.hcl"
-      - "*.pkrvars.hcl"
+      - "packer/**"
       - ".github/workflows/packer.yaml"
   workflow_dispatch:
 
@@ -32,15 +31,19 @@ jobs:
 
       - name: Initialize Packer
         run: packer init .
+        working-directory: packer
 
       - name: Check formatting
         run: packer fmt -check .
+        working-directory: packer
 
       - name: Validate template
         run: packer validate -var-file="dev.pkrvars.hcl" .
+        working-directory: packer
 
       - name: Build AMI
         run: packer build -var-file="dev.pkrvars.hcl" -var="ami_name=packer-ubuntu-dev-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" .
+        working-directory: packer
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -49,7 +52,7 @@ jobs:
         id: ami
         shell: bash
         run: |
-          ami_id="$(jq -er '[.builds[] | select(.builder_type == "amazon-ebs") | .artifact_id | split(":") | last | select(test("^ami-[0-9a-fA-F]+$"))] | last' manifest.json)"
+          ami_id="$(jq -er '[.builds[] | select(.builder_type == "amazon-ebs") | .artifact_id | split(":") | last | select(test("^ami-[0-9a-fA-F]+$"))] | last' packer/manifest.json)"
           echo "ami_id=$ami_id" >> "$GITHUB_OUTPUT"
 
       - name: Install Terraform
