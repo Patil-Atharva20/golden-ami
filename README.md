@@ -9,7 +9,8 @@ Terraform to create or update the EC2 instance. Changes under `terraform/` or
 to the Terraform workflow run Terraform only, using the AMI ID already recorded
 in Terraform state; they do not rebuild the AMI. README-only changes do not
 start either workflow. Terraform state is stored in S3 so later runs update
-the same instance rather than creating a new one.
+the same instance rather than creating a new one. The workflows' path filters
+intentionally exclude Markdown documentation.
 
 ### One-time Terraform state setup
 
