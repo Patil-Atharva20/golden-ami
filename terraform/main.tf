@@ -118,6 +118,7 @@ output "instance_id" {
   value       = aws_instance.ami_test.id
 }
 
+# Reused by the Terraform-only workflow for subsequent infrastructure changes.
 output "instance_ami_id" {
   description = "AMI used by the test instance."
   value       = aws_instance.ami_test.ami
